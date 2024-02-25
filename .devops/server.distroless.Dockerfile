@@ -21,7 +21,7 @@ RUN set -eux; \
     mkdir build; \
     cd build; \
     cmake .. \
-      -DLLAMA_CUBLAS=ON \
+      -DLLAMA_BLAS=ON \
       -DCMAKE_BUILD_TYPE=Release; \
     cmake --build . \
       --config Release \
