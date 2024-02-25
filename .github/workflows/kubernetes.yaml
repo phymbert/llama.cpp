@@ -31,7 +31,8 @@ jobs:
 #          tags: 127.0.0.1:5000/server-distroless-llama.cpp:${{ env.COMMIT_SHA }}
 #          file: .devops/server.distroless.Dockerfile
 
-      - name: Test
+      - name: Docker build
+        id: docker_build
         run: |
           kubectl cluster-info
           kubectl get storageclass standard
@@ -42,15 +43,19 @@ jobs:
             exit 1
           fi
 
-          # Test registry usage inside cluster
-          docker pull busybox
-          docker tag busybox kind-registry:5000/localbusybox
-          docker push kind-registry:5000/localbusybox
+          docker build -f .devops/server.distroless.Dockerfile -t $KIND_REGISTRY/server-distroless-llama.cpp:${{ env.COMMIT_SHA }}
+          docker push $KIND_REGISTRY/server-distroless-llama.cpp:${{ env.COMMIT_SHA }}
 
       - name: Deploy prometheus
         id: deploy_prometheus
-        shell: bash
         run: |
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo update
           helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack
+
+      - name: Deploy llama.cpp server
+        id: deploy_prometheus
+        run: |
+          helm repo add prometheus-community ./examples/kubernetes/helm-charts
+          helm repo update
+          helm install llama-cpp-stack server.llama.cpp
