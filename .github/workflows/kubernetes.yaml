@@ -38,5 +38,5 @@ jobs:
           context: .
           push: true
           platforms: ${{ matrix.config.platforms }}
-          tags: kind-registry:5000/server-distroless-llama.cpp:${{ env.COMMIT_SHA }}"
+          tags: kind-registry:5000/server-distroless-llama.cpp:${{ env.COMMIT_SHA }}
           file: .devops/server.distroless.Dockerfile
