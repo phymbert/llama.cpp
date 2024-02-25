@@ -7,11 +7,6 @@ on:
     branches:
       - master
       - example/kubernetes # FIXME remove
-    paths: ['.devops/*.*', '.github/workflows/kubernetes.yml', 'examples/kubernetes/**.*']
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths: ['.devops/*.*', '.github/workflows/kubernetes.yml', 'examples/kubernetes/**.*']
-
 jobs:
   server:
     runs-on: ubuntu-latest
