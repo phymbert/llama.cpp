@@ -16,27 +16,41 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
-
       - name: Create k8s Kind Cluster
+        id: create_kind_cluster
         uses: container-tools/kind-action@v1
+#
+#      - name: Build and push Docker image
+#        id: docker_build
+#        uses: docker/build-push-action@v4
+#        with:
+#          driver-opts: network=host
+#          context: .
+#          push: true
+#          platforms: ${{ matrix.config.platforms }}
+#          tags: 127.0.0.1:5000/server-distroless-llama.cpp:${{ env.COMMIT_SHA }}
+#          file: .devops/server.distroless.Dockerfile
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          platforms: ${{ matrix.config.platforms }}
-          tags: 127.0.0.1:5000/server-distroless-llama.cpp:${{ env.COMMIT_SHA }}
-          file: .devops/server.distroless.Dockerfile
+      - name: Test
+        run: |
+          kubectl cluster-info
+          kubectl get storageclass standard
+
+          # Checking env variable
+          if [[ "$KIND_REGISTRY" != "kind-registry:5000" ]]; then
+            echo "Wrong KIND_REGISTRY env variable: $KIND_REGISTRY"
+            exit 1
+          fi
+
+          # Test registry usage inside cluster
+          docker pull busybox
+          docker tag busybox kind-registry:5000/localbusybox
+          docker push kind-registry:5000/localbusybox
+
+      - name: Deploy prometheus
+        id: deploy_prometheus
+        shell: bash
+        run: |
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+          helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack
