@@ -36,7 +36,7 @@ jobs:
           - { tag: "light-cuda", dockerfile: ".devops/main-cuda.Dockerfile", platforms: "linux/amd64" }
           - { tag: "full-cuda", dockerfile: ".devops/full-cuda.Dockerfile", platforms: "linux/amd64" }
           - { tag: "server-cuda", dockerfile: ".devops/server-cuda.Dockerfile", platforms: "linux/amd64" }
-          - { tag: "server-distroless", dockerfile: ".devops/server-distroless.Dockerfile", platforms: "linux/amd64" }
+          - { tag: "server-distroless", dockerfile: ".devops/server.distroless.Dockerfile", platforms: "linux/amd64" }
           - { tag: "light-rocm", dockerfile: ".devops/main-rocm.Dockerfile", platforms: "linux/amd64,linux/arm64" }
           - { tag: "full-rocm", dockerfile: ".devops/full-rocm.Dockerfile", platforms: "linux/amd64,linux/arm64" }
           - { tag: "server-rocm", dockerfile: ".devops/server-rocm.Dockerfile", platforms: "linux/amd64,linux/arm64" }
