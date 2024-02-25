@@ -56,6 +56,6 @@ jobs:
       - name: Deploy llama.cpp server
         id: deploy_llama_cpp
         run: |
-          helm repo add prometheus-community ./examples/kubernetes/helm-charts
+          helm repo add llama-cpp ./examples/kubernetes/helm-charts
           helm repo update
           helm install llama-cpp-stack server.llama.cpp
