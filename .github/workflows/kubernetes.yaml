@@ -54,7 +54,7 @@ jobs:
           helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack
 
       - name: Deploy llama.cpp server
-        id: deploy_prometheus
+        id: deploy_llama.cpp
         run: |
           helm repo add prometheus-community ./examples/kubernetes/helm-charts
           helm repo update
