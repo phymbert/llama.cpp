@@ -14,7 +14,6 @@ on:
   push:
     branches:
       - master
-      - example/kubernetes # FIXME remove
 
 jobs:
   push_to_registry:
