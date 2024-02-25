@@ -1,0 +1,45 @@
+# Kubernetes helm chart test
+name: Kubernetes
+
+on:
+  workflow_dispatch: # allows manual triggering
+  push:
+    branches:
+      - master
+      - example/kubernetes # FIXME remove
+    paths: ['.devops/*.*', '.github/kubernetes.yml', 'examples/kubernetes/**.*']
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths: ['.devops/*.*', '.github/kubernetes.yml', 'examples/kubernetes/**.*']
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Create k8s Kind Cluster
+        uses: container-tools/kind-action@v1
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          platforms: ${{ matrix.config.platforms }}
+          tags: kind-registry:5000/server-distroless-llama.cpp:${{ env.COMMIT_SHA }}"
+          file: .devops/server.distroless.Dockerfile
