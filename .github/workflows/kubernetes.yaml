@@ -8,8 +8,10 @@ on:
       - master
       - example/kubernetes # FIXME remove
 jobs:
-  server:
+  kubernetes:
     runs-on: ubuntu-latest
+    env:
+      COMMIT_SHA: ${{ github.sha }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
