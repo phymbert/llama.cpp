@@ -27,7 +27,7 @@ RUN set -eux; \
       --config Release \
       --target server;
 
-FROM distroless/cc-debian12:nonroot as runtime
+FROM gcr.io/distroless/cc-debian12:nonroot as runtime
 
 COPY --from=build /usr/lib/x86_64-linux-gnu/libopenblas.so.0 \
                     /usr/lib/x86_64-linux-gnu/libquadmath.so.0 \
