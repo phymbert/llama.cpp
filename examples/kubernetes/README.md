@@ -2,6 +2,8 @@
 
 This example demonstrates how to deploy [llama.cpp server](../server) on a [kubernetes cluster](https://kubernetes.io).
 
+![llama.cpp.kubernetes.png](llama.cpp.kubernetes.png)
+
 ## Prerequisites
 
 Obviously you need a kubernetes cluster.
