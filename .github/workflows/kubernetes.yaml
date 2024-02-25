@@ -43,7 +43,7 @@ jobs:
             exit 1
           fi
 
-          docker build -f .devops/server.distroless.Dockerfile -t $KIND_REGISTRY/server-distroless-llama.cpp:${{ env.COMMIT_SHA }}
+          docker build .devops/server.distroless.Dockerfile -t $KIND_REGISTRY/server-distroless-llama.cpp:${{ env.COMMIT_SHA }}
           docker push $KIND_REGISTRY/server-distroless-llama.cpp:${{ env.COMMIT_SHA }}
 
       - name: Deploy prometheus
