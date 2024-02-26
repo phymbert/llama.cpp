@@ -11,7 +11,7 @@ Obviously you need a kubernetes cluster.
 Required access to an API server with the following `roles`:
 
 - verbs: `["get", "list", "watch", "create", "update", "patch", "delete"]` 
-- resources: `["pods", "deployments", "services", "pvc", "jobs"]`
+- resources: `["pods", "deployments", "services", "pvc", "jobs", "ingresses]`
 
 If you do not have a real k8s cluster, you can give a try to [kind](https://kind.sigs.k8s.io/).
 
