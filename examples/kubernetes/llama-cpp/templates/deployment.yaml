@@ -1,0 +1,146 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "server.llama.cpp.fullname" . }}
+  labels:
+    {{- include "server.llama.cpp.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "server.llama.cpp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- include "server.llama.cpp.labels" . | nindent 8 }}
+        {{- if .Values.server.metrics }}
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '{{ .Values.server.port }}'
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        prometheus.io/scrape: 'true'
+        {{- include "server.llama.cpp.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: wait-model
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ .Values.images.downloader.repository }}:{{ .Values.images.downloader.name }}-{{ .Values.images.downloader.tag }}
+          env:
+            - name: MODEL_PATH
+              value: {{ .Values.model.path }}
+            - name: MODEL_FILE
+              value: {{  regexReplaceAll "(.*/)?([^/]+).gguf" .Values.model.file "${2}.gguf" }}
+            - name: MODEL_SHA256
+              value: {{ .Values.model.sha256 }}
+            - name: MODEL_DOWNLOAD_REPO
+              value: {{ .Values.model.repo }}
+            - name: MODEL_DOWNLOAD_FILE
+              value: {{ .Values.model.file }}
+          command:
+            - sh
+            - -c
+          args:
+            - >
+              set -eux;
+              while ! echo "${MODEL_SHA256} *${MODEL_PATH}/${MODEL_FILE}" | sha256sum -c - ; do
+                echo "waiting for model file${MODEL_PATH}/${MODEL_FILE}=${MODEL_SHA256}";
+                sleep 1;
+              done
+          volumeMounts:
+            - mountPath: {{ .Values.model.path }}
+              name: models
+              readOnly: true
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.images.server.repository }}:{{ .Values.images.server.name }}-{{ .Values.images.server.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.images.pullPolicy }}
+          command:
+            - {{ .Values.server.command }}
+          args:
+            - --host
+            - {{ .Values.server.host }}
+            - --port
+            - "{{ .Values.server.port }}"
+            - --model
+            - {{ .Values.model.path }}/{{  regexReplaceAll "(.*/)?([^/]+).gguf" .Values.model.file "${2}.gguf" }}
+            - --cont-batching
+            - --alias
+            - {{ .Values.model.alias }}
+            - --ctx-size
+            - "{{ .Values.server.kvCache.size }}"
+            - --parallel
+            - "{{ .Values.server.slots }}"
+            {{- if .Values.server.embeddings }}
+            - --embedding
+            {{- end }}
+            {{- if .Values.server.metrics }}
+            - --metrics
+            {{- end }}
+            - --log-format
+            - {{ .Values.server.log.format }}
+            {{- if  .Values.server.log.disabled }}
+            - --log-disable
+            {{- end }}
+            {{- with .Values.server.extraArgs }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.server.port }}
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.server.port }}
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.server.port }}
+
+          readinessProbe:
+            httpGet:
+              path: /health?fail_on_no_slot
+              port: {{ .Values.server.port }}
+
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - mountPath: {{ .Values.model.path }}
+              name: models
+              readOnly: true
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ include "server.llama.cpp.fullname" . }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,9 +1,9 @@
-{{- if .Values.ingress.enabled -}}
+{{- if and .Values.server.embeddings .Values.ingresses.embeddings.enabled -}}
 {{- $fullName := include "server.llama.cpp.fullname" . -}}
 {{- $svcPort := .Values.service.port -}}
-{{- if and .Values.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
-  {{- if not (hasKey .Values.ingress.annotations "kubernetes.io/ingress.class") }}
-  {{- $_ := set .Values.ingress.annotations "kubernetes.io/ingress.class" .Values.ingress.className}}
+{{- if and .Values.ingresses.embeddings.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
+  {{- if not (hasKey .Values.ingresses.embeddings.annotations "kubernetes.io/ingress.class") }}
+  {{- $_ := set .Values.ingresses.embeddings.annotations "kubernetes.io/ingress.class" .Values.ingresses.embeddings.className}}
   {{- end }}
 {{- end }}
 {{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
@@ -15,20 +15,20 @@ apiVersion: extensions/v1beta1
 {{- end }}
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ $fullName }}-embeddings
   labels:
     {{- include "server.llama.cpp.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
+  {{- with .Values.ingresses.embeddings.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
-  ingressClassName: {{ .Values.ingress.className }}
+  {{- if and .Values.ingresses.embeddings.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
+  ingressClassName: {{ .Values.ingresses.embeddings.className }}
   {{- end }}
-  {{- if .Values.ingress.tls }}
+  {{- if .Values.ingresses.embeddings.tls }}
   tls:
-    {{- range .Values.ingress.tls }}
+    {{- range .Values.ingresses.embeddings.tls }}
     - hosts:
         {{- range .hosts }}
         - {{ . | quote }}
@@ -37,9 +37,8 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
-      http:
+    {{- range .Values.ingresses.embeddings.hosts }}
+    - http:
         paths:
           {{- range .paths }}
           - path: {{ .path }}
@@ -58,4 +57,8 @@ spec:
               {{- end }}
           {{- end }}
     {{- end }}
+      {{- if .host }}
+      host: {{ .host | quote }}
+      {{- end }}
+
 {{- end }}
