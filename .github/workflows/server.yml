@@ -79,7 +79,7 @@ jobs:
 
       - name: Slow tests
         id: server_integration_tests_slow
-        if: github.event.schedule != ''
+        if: ${{ github.event.schedule != '' && matrix.build_type == 'Release' }}
         run: |
           cd examples/server/tests
           PORT=8888 ./tests.sh --stop --no-skipped --no-capture --tags slow
