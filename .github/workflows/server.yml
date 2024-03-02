@@ -4,8 +4,13 @@ name: Server
 on:
   workflow_dispatch: # allows manual triggering
   push:
+    branches:
+      - master
+      - tests/server/passkey-TMP
+  pull_request:
+    types: [opened, synchronize, reopened]
   schedule:
-    -  cron: '00 0 * * *'
+    -  cron: '36 8 * * *'
 
 jobs:
   server:
