@@ -10,11 +10,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
   schedule:
-    -  cron: '45 8 * * *'
-    -  cron: '42 8 * * *'
-    -  cron: '50 8 * * *'
-    -  cron: '45 9 * * *'
-    -  cron: '42 9 * * *'
+    -  cron: '*/5 * * * *'
 
 jobs:
   server:
