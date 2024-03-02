@@ -3,6 +3,11 @@ name: Server
 
 on:
   workflow_dispatch: # allows manual triggering
+    inputs:
+      slow_tests:
+        description: 'Run slow tests'
+        required: true
+        type: boolean
   push:
     branches:
       - master
@@ -79,7 +84,7 @@ jobs:
 
       - name: Slow tests
         id: server_integration_tests_slow
-        if: ${{ github.event.schedule != '' && matrix.build_type == 'Release' }}
+        if: ${{ github.event.schedule != '' && matrix.build_type == 'Release' || github.event.inputs.slow_tests == 'true' }}
         run: |
           cd examples/server/tests
           PORT=8888 ./tests.sh --stop --no-skipped --no-capture --tags slow
