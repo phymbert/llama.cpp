@@ -19,11 +19,10 @@ on:
   push:
     branches:
       - master
-      - hp/server/bench/workflow # FIXME remove
-    paths: ['.github/workflows/server.yml', '**/CMakeLists.txt', '**/Makefile', '**/*.h', '**/*.hpp', '**/*.c', '**/*.cpp', '**/*.cu', '**/*.swift', '**/*.m', 'examples/server/bench/**.*']
+    paths: ['.github/workflows/bench.yml', '**/CMakeLists.txt', '**/Makefile', '**/*.h', '**/*.hpp', '**/*.c', '**/*.cpp', '**/*.cu', '**/*.swift', '**/*.m', 'examples/server/bench/**.*']
   pull_request:
     types: [opened, synchronize, reopened]
-    paths: ['.github/workflows/server.yml', '**/CMakeLists.txt', '**/Makefile', '**/*.h', '**/*.hpp', '**/*.c', '**/*.cpp', '**/*.cu', '**/*.swift', '**/*.m', 'examples/server/bench/**.*']
+    paths: ['.github/workflows/bench.yml', '**/CMakeLists.txt', '**/Makefile', '**/*.h', '**/*.hpp', '**/*.c', '**/*.cpp', '**/*.cu', '**/*.swift', '**/*.m', 'examples/server/bench/**.*']
   schedule:
     -  cron: '04 2 * * *'
 
@@ -36,7 +35,7 @@ jobs:
     runs-on: Standard_NC4as_T4_v3
     env:
       RUNNER_LABEL: Standard_NC4as_T4_v3 # FIXME Do not find a way to not duplicate it
-    if: ${{ github.event.inputs.gpu-series == 'Standard_NC4as_T4_v3' || github.event.schedule || github.event.pull_request != '' || github.event.push.ref == 'refs/heads/master' }}
+    #if: ${{ github.event.inputs.gpu-series == 'Standard_NC4as_T4_v3' || github.event.schedule || github.event.pull_request || github.event.push.ref == 'refs/heads/master' }}
     steps:
       - name: Clone
         id: checkout
@@ -119,7 +118,7 @@ jobs:
               --n-prompts 1000 \
               --max-prompt-tokens 1024 \
               --max-tokens 2048
-          
+
            cat results.github.env >> $GITHUB_ENV
 
 #      - name: Comment PR
@@ -134,9 +133,10 @@ jobs:
       - name: Commit status
         uses: Sibz/github-status-action@v1
         with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
           context: ${{ github.job }}
           description: |
-            $BENCH_RESULTS
+            ${{ env.BENCH_RESULTS }}
           state: 'success'
 
       - name: Upload results
