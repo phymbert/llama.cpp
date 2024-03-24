@@ -32,10 +32,7 @@ concurrency:
 
 jobs:
   server-baseline:
-    runs-on:
-      group: azure-ubuntu-runners
-      labels:
-        - Standard_NC4as_T4_v3
+    runs-on: Standard_NC4as_T4_v3
     if: ${{ github.event.schedule || github.event.inputs.gpu-series == 'Standard_NC4as_T4_v3' || github.event.pull_request || github.event.push.ref == 'refs/heads/master' }}
     steps:
       - name: Clone
