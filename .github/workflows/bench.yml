@@ -26,13 +26,17 @@ on:
   schedule:
     -  cron: '0 0 * * *'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   server-baseline:
     runs-on:
       group: azure-ubuntu-runners
       labels:
         - Standard_NC4as_T4_v3
-    if: ${{ github.event.schedule || github.event.inputs.gpu-series == 'Standard_NC4as_T4_v3' || github.event.pull_request }}
+    if: ${{ github.event.schedule || github.event.inputs.gpu-series == 'Standard_NC4as_T4_v3' || github.event.pull_request || github.event.push.ref == 'refs/heads/master' }}
     steps:
       - name: Clone
         id: checkout
