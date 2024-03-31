@@ -70,7 +70,11 @@ jobs:
         run: |
           git config --global --add safe.directory $(realpath .)
           cd examples/server
+          git ls-files --others --modified
+          git status
           ./deps.sh
+          git status
+          git ls-files --others --modified
           not_ignored_files="$(git ls-files --others --modified)"
           if [ -n "${not_ignored_files}" ]; then
             echo "Repository is dirty or server deps are not built as expected"
