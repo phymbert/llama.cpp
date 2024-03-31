@@ -11,12 +11,12 @@ on:
   push:
     branches:
       - master
-    paths: ['.github/workflows/server.yml', '**/CMakeLists.txt', '**/Makefile', '**/*.h', '**/*.hpp', '**/*.c', '**/*.cpp', '**/*.cu', '**/*.swift', '**/*.m', 'examples/server/tests/**.*']
-  pull_request:
+    paths: ['.github/workflows/server.yml', '**/CMakeLists.txt', '**/Makefile', '**/*.h', '**/*.hpp', '**/*.c', '**/*.cpp', '**/*.cu', '**/*.swift', '**/*.m', 'examples/server/**.*']
+  pull_request_target:
     types: [opened, synchronize, reopened]
-    paths: ['.github/workflows/server.yml', '**/CMakeLists.txt', '**/Makefile', '**/*.h', '**/*.hpp', '**/*.c', '**/*.cpp', '**/*.cu', '**/*.swift', '**/*.m', 'examples/server/tests/**.*']
+    paths: ['.github/workflows/server.yml', '**/CMakeLists.txt', '**/Makefile', '**/*.h', '**/*.hpp', '**/*.c', '**/*.cpp', '**/*.cu', '**/*.swift', '**/*.m', 'examples/server/**.*']
   schedule:
-    -  cron: '0 0 * * *'
+    -  cron: '2 4 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -62,6 +62,18 @@ jobs:
             wget \
             language-pack-en \
             libcurl4-openssl-dev
+
+      - name: Verify server deps
+        id: verify_server_deps
+        run: |
+          cd examples/server
+          ./deps.sh
+          not_ignored_files="$(git ls-files --others)"
+          if [ -n "${not_ignored_files}" ]; then
+            echo "Repository is dirty or server deps are not built as expected"
+            echo "${not_ignored_files}"
+            exit 1
+          fi
 
       - name: Build
         id: cmake_build
