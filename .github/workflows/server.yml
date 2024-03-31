@@ -54,6 +54,7 @@ jobs:
             git \
             cmake \
             python3-pip \
+            curl \
             wget \
             language-pack-en \
             libcurl4-openssl-dev
