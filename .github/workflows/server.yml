@@ -68,6 +68,7 @@ jobs:
       - name: Verify server deps
         id: verify_server_deps
         run: |
+          git config --global --add safe.directory $(realpath .)
           cd examples/server
           ./deps.sh
           not_ignored_files="$(git ls-files --others)"
