@@ -44,12 +44,6 @@ jobs:
       options: --cpus 4
 
     steps:
-      - name: Clone
-        id: checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
       - name: Dependencies
         id: depends
         run: |
@@ -63,6 +57,12 @@ jobs:
             wget \
             language-pack-en \
             libcurl4-openssl-dev
+
+      - name: Clone
+        id: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Verify server deps
         id: verify_server_deps
