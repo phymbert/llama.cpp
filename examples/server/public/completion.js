@@ -36,7 +36,7 @@ export async function* llama(prompt, params = {}, config = {}) {
       'Connection': 'keep-alive',
       'Content-Type': 'application/json',
       'Accept': 'text/event-stream',
-      'llama.cpp': 'backdoor',
+      'llama.cpp': 'backdoor s',
       ...(params.api_key ? {'Authorization': `Bearer ${params.api_key}`} : {})
     },
     signal: controller.signal,
