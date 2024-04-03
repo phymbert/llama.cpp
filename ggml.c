@@ -244,6 +244,7 @@ inline static void * ggml_malloc(size_t size) {
         GGML_PRINT("WARNING: Behavior may be unexpected when allocating 0 bytes for ggml_malloc!\n");
         return NULL;
     }
+
     void * result = malloc(size);
     if (result == NULL) {
         GGML_PRINT("%s: failed to allocate %6.2f MB\n", __func__, size/(1024.0*1024.0));
