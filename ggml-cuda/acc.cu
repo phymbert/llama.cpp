@@ -18,6 +18,7 @@ static __global__ void acc_f32(const float * x, const float * y, float * dst, co
     }
 }
 
+
 static void acc_f32_cuda(const float * x, const float * y, float * dst, const int n_elements,
     const int ne10, const int ne11, const int ne12,
     const int nb1, const int nb2, const int offset, cudaStream_t stream) {
