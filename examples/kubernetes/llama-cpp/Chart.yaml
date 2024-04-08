@@ -3,4 +3,4 @@ name: llama-cpp
 description: llama.cpp Helm chart for Kubernetes
 type: application
 version: 0.0.1
-appVersion: "cbbd1efa06f8c09f9dff58ff9d9af509cc4c152b"
+appVersion: "77d1ac7e00bf049b9f2bba1b5a310a78318c49c4"

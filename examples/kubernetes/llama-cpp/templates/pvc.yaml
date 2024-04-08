@@ -4,6 +4,8 @@ metadata:
   name: {{ include "server.llama.cpp.fullname" . }}
   labels:
     {{- include "server.llama.cpp.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: "keep"
 spec:
   accessModes:
     - ReadWriteOnce
@@ -11,7 +13,5 @@ spec:
     requests:
       storage: {{ .Values.model.size | quote }}
 {{- if .Values.persistence.storageClass }}
-{{- if (not empty .Values.persistence.storageClass) }}
-  storageClassName: "{{ .Values.persistence.storageClass }}"
-{{- end }}
+  storageClassName: {{ .Values.persistence.storageClass }}
 {{- end }}

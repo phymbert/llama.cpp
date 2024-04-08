@@ -1,13 +1,13 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name:  download-model-{{ include "server.llama.cpp.fullname" . }}
+  name:  {{ include "server.llama.cpp.fullname" . }}-download-model
   labels:
     {{- include "server.llama.cpp.labels" . | nindent 4 }}
 spec:
   template:
     metadata:
-      name: download-model-{{ include "server.llama.cpp.fullname" . }}
+      name: {{ include "server.llama.cpp.fullname" . }}-download-model
       {{- with .Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
@@ -22,7 +22,7 @@ spec:
         - name: {{ include "server.llama.cpp.fullname" . }}-download-model
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: {{ .Values.images.downloader.repository }}:{{ .Values.images.downloader.name }}-{{ .Values.images.downloader.tag }}
+          image: {{ .Values.images.downloader.repository }}:{{ .Values.images.downloader.name }}{{if  .Values.images.downloader.tag }}-{{end}}{{ .Values.images.downloader.tag }}
           env:
             - name: MODEL_PATH
               value: {{ .Values.model.path }}
@@ -51,3 +51,16 @@ spec:
         - name: models
           persistentVolumeClaim:
             claimName: {{ include "server.llama.cpp.fullname" . }}
+            readOnly: false
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
