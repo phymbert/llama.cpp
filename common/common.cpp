@@ -109,6 +109,7 @@ int32_t get_num_physical_cores() {
 }
 
 #if defined(__x86_64__) && defined(__linux__)
+#ifndef __ANDROID__
 #include <pthread.h>
 
 static void cpuid(unsigned leaf, unsigned subleaf,
@@ -156,6 +157,7 @@ static int count_math_cpus(int cpu_count) {
     return result;
 }
 
+#endif // __ANDROID__
 #endif // __x86_64__ && __linux__
 
 /**
@@ -163,6 +165,7 @@ static int count_math_cpus(int cpu_count) {
  */
 int get_math_cpu_count() {
 #if defined(__x86_64__) && defined(__linux__)
+#ifndef __ANDROID__
     int cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
     if (cpu_count < 1) {
         return get_num_physical_cores();
@@ -177,7 +180,8 @@ int get_math_cpu_count() {
             }
         }
     }
-#endif
+#endif // __ANDROID__
+#endif // __x86_64__ && __linux__
     return get_num_physical_cores();
 }
 
