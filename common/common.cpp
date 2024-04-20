@@ -266,7 +266,7 @@ bool parse_kv_override(const char * data, std::vector<llama_model_kv_override> &
     } else if (strncmp(sep, "str:", 4) == 0) {
         sep += 4;
         kvo.tag = LLAMA_KV_OVERRIDE_TYPE_STR;
-        strncpy(kvo.str_value, sep, 128);
+        strncpy(kvo.str_value, sep, 127);
     } else {
         fprintf(stderr, "%s: invalid type for KV override '%s'\n", __func__, data);
         return false;
