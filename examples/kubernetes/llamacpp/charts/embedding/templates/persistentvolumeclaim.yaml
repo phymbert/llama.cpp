@@ -1,0 +1,18 @@
+{{- range $modelName, $modelConfig := .Values.models }}
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "embedding.fullname" $ | lower }}-pvc-{{ $modelName }}
+  labels:
+    {{- include "embedding.labels" $ | nindent 4 }}
+    modelnameInternal: {{ $modelName }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+
+{{- end}}

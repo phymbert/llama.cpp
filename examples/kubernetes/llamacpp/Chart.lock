@@ -1,0 +1,9 @@
+dependencies:
+- name: model-runner
+  repository: file://charts/model-runner
+  version: 0.1.0
+- name: embedding
+  repository: file://charts/embedding
+  version: 0.1.0
+digest: sha256:91f709ba2b6a0d17e8ebfe5ee93141115d1d85ae6d1fd3cf77bc6dfaec76d69c
+generated: "2024-05-12T19:06:38.283833152+08:00"

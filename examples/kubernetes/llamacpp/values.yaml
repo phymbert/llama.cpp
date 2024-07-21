@@ -1,0 +1,108 @@
+# Default values for llamacpp.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {
+    nginx.ingress.kubernetes.io/rewrite-target: /$2,
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  }
+  hosts:
+    - host: demo.local
+      pathtype: ImplementationSpecific
+        
+  tls: []
+
+
+
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+
+
+
+modelRunner:
+  fullname: "modelrunner"
+  service:
+    type: ClusterIP
+    port: 8080
+  modelPath: 
+    val: <Path to local>
+  models: {
+    "model1":{
+      "enabled": true,
+      "download": true,
+      "replicas": 3,
+      "device": "cpu",
+      "autoScale": {
+        "enabled": false,
+        "minReplicas": 1,
+        "maxReplicas": 100,
+        "targetCPUUtilizationPercentage": 80
+      },
+      "url": "https://huggingface.co/TheBloke/CapybaraHermes-2.5-Mistral-7B-GGUF/resolve/main/capybarahermes-2.5-mistral-7b.Q4_0.gguf",
+      "image": "ghcr.io/ggerganov/llama.cpp:server",
+      "endpoint": "/model1"
+    },
+    "model2": {
+      "enabled": true,
+      "replicas": 1,
+      "download": true,
+      "device": "cuda",
+      "autoScale": {
+        "enabled": false,
+        "minReplicas": 1,
+        "maxReplicas": 100,
+        "targetCPUUtilizationPercentage": 80
+      },
+      "url": "https://huggingface.co/TheBloke/CapybaraHermes-2.5-Mistral-7B-GGUF/resolve/main/capybarahermes-2.5-mistral-7b.Q4_0.gguf",
+      "image": "ghcr.io/ggerganov/llama.cpp:server-cuda",
+      "endpoint": "/model2"
+    },
+  }
+
+
+embedding:
+  fullname: "embedding"
+  service:
+    type: ClusterIP
+    port: 8080
+  modelPath: 
+    val: /home/vadmin/Desktop/models
+  models: {
+    "emod": {
+      "enabled": true,
+      "replicas": 1,
+      "download": true,
+      "device": "cpu",
+      "autoScale": {
+        "enabled": false,
+        "minReplicas": 1,
+        "maxReplicas": 100,
+        "targetCPUUtilizationPercentage": 80
+      },
+      "url": "https://huggingface.co/TheBloke/CapybaraHermes-2.5-Mistral-7B-GGUF/resolve/main/capybarahermes-2.5-mistral-7b.Q4_0.gguf",
+      "image": "ghcr.io/ggerganov/llama.cpp:server",
+      "endpoint": "/e"
+    },
+  }
+

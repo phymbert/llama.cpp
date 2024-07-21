@@ -1,0 +1,22 @@
+{{- range $modelName, $modelConfig := .Values.models }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "modelRunner.fullname" $ | lower }}-{{ $modelName }}-svc
+  labels:
+    {{- include "modelRunner.labels" $ | nindent 4 }}
+    modelnameInternal: {{ $modelName }}
+spec:
+  type: {{ $.Values.service.type }}
+  ports:
+    - port: {{ $.Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "modelRunner.selectorLabels" $ | nindent 4 }}
+    modelnameInternal: {{ $modelName }}
+
+---
+{{- end }}

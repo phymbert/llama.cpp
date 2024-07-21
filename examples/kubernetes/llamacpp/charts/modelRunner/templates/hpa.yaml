@@ -1,0 +1,24 @@
+{{- range $modelName, $modelConfig := .Values.models }}
+{{ if $modelConfig.autoScale.enabled }}
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "modelRunner.fullname" $ | lower }}-{{ $modelName }}-hpa
+  labels:
+    app: {{ include "modelRunner.name" . }}
+    chart: {{ include "modelRunner.chart" . }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "modelRunner.fullname" $ | lower }}-{{ $modelName }}
+  minReplicas: {{ $modelConfig.autoScale.minReplicas }}
+  maxReplicas: {{ $modelConfig.autoScale.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ $modelConfig.autoScale.targetAverageUtilization }}
+---
+{{- end }}
+{{- end }}

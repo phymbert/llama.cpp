@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "modelRunner.fullname" $ | lower }}-sidecar
+  labels:
+    {{- include "modelRunner.labels" $ | nindent 4 }}
+    modelnameInternal: sidecar
+
+spec:
+  selector:
+    matchLabels:
+      {{- include "modelRunner.labels" $ | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "modelRunner.labels" $ | nindent 8 }}
+        modelnameInternal: sidecar
+
+    spec:
+      securityContext: 
+        fsGroup: 2000 
+      containers:
+        - name: curl-sidecar
+          image: curlimages/curl:7.79.1
+          command: ["/bin/sh", "-c", "tail -f /dev/null"]
+
+
+---
+

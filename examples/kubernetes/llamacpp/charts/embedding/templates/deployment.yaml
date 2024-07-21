@@ -1,0 +1,161 @@
+{{ $port := .Values.service.port }}
+{{- range $modelName, $modelConfig := .Values.models }}
+{{- if $modelConfig.enabled }}
+
+{{- if $modelConfig.download }}
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "embedding.fullname" $ | lower }}-download-{{ $modelName }}
+  labels:
+    app: {{ include "embedding.fullname" $ | lower }}
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: fix-permissions
+          image: busybox
+          command: ["sh", "-c", "chmod -R 777 /models"]
+          volumeMounts:
+            - name: {{ include "embedding.fullname" $ | lower }}-pv-{{ $modelName }}
+              mountPath: /models
+        
+      containers:
+      - name: init-job
+        image: alpine/k8s:1.27.11
+        command:
+          - sh
+          - -c
+          - |
+            set -e
+            if curl -L {{ $modelConfig.url }} --output /models/{{ $modelName }}/{{ $modelName }}.gguf; then
+              kubectl patch configmap {{ include "embedding.fullname" $ | lower }}-configmap --type merge -p '{"data": {"{{ $modelName }}.status": "completed"}}'
+              echo "Download succeeded"
+            else
+              echo "Download failed"
+              exit 1
+            fi
+        volumeMounts:
+          - name: {{ include "embedding.fullname" $ | lower }}-pv-{{ $modelName }}
+            mountPath: /models/{{ $modelName }}
+          - name: kubeconfig
+            mountPath: /.kube
+      restartPolicy: OnFailure
+      volumes:
+        - name: {{ include "embedding.fullname" $ | lower }}-pv-{{ $modelName }}
+          persistentVolumeClaim:
+            claimName: {{ include "embedding.fullname" $ | lower }}-pvc-{{ $modelName }}
+        - name: kubeconfig
+          hostPath:
+            path: /home/vadmin/.kube
+  backoffLimit: 4
+
+---
+
+{{- end }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "embedding.fullname" $ | lower }}-{{ $modelName }}
+  labels:
+    {{- include "embedding.labels" $ | nindent 4 }}
+    modelnameInternal: {{ $modelName }}
+
+spec:
+  {{- if ne (int $modelConfig.replicas) 0 }}
+  replicas: {{ $modelConfig.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "embedding.labels" $ | nindent 6 }}
+      modelnameInternal: {{ $modelName }}
+  template:
+    metadata:
+      labels:
+        {{- include "embedding.labels" $ | nindent 8 }}
+        modelnameInternal: {{ $modelName }}
+    spec:
+      securityContext: 
+        fsGroup: 2000 
+      initContainers:
+        - name: check-download-job
+          image: alpine/k8s:1.27.11
+          command:
+            - sh
+            - -c
+            - |
+              while true; do
+                STATUS=$(kubectl get configmap {{ include "embedding.fullname" $ | lower }}-configmap -o jsonpath='{.data.{{ $modelName }}\.status}')
+                if [ "$STATUS" == "completed" ]; then
+                  echo "Configmap updated"
+                  sleep 5
+                  exit 0
+                fi
+                kubectl get configmap {{ include "embedding.fullname" $ | lower }}-configmap -o jsonpath='{.data.{{ $modelName }}\.status}'
+                echo "Waiting for configmap update..."
+                sleep 15
+              done
+          volumeMounts:
+            - name: kubeconfig
+              mountPath: /.kube
+      containers:
+        - name: {{ $modelName }}
+          image: "{{ $modelConfig.image }}" 
+          command: 
+            {{- if eq $modelConfig.device  "cuda" }}
+            - /server
+            {{- else }}
+            - /llama-server
+            {{- end }}
+            - --verbose
+            - -m
+            - /models/{{ $modelName }}.gguf
+            - --host
+            - 0.0.0.0
+            {{- if eq $modelConfig.device  "cuda" }}
+            - --n-gpu-layers
+            - "99"
+            {{- end }}
+            
+          volumeMounts:
+            - name: {{ include "embedding.fullname" $ | lower }}-pv-{{ $modelName }}
+              mountPath: /models
+              readOnly: false
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 2000
+          ports: 
+            - name: http
+              containerPort: {{ $port }}
+              protocol: TCP
+          tolerations:
+            - key: "node.kubernetes.io/unreachable"
+              operator: "Exists"
+              effect: "NoExecute"
+          {{- if eq $modelConfig.device  "cuda" }}
+          resources:
+            limits:
+              nvidia.com/gpu: 1 # Request 1 GPU
+          {{- end }}
+      livenessProbe:
+        {{- toYaml $.Values.livenessProbe | nindent 12 }}
+      readinessProbe:
+        {{- toYaml $.Values.readinessProbe | nindent 12 }}
+
+      volumes:
+        - name: {{ include "embedding.fullname" $ | lower }}-pv-{{ $modelName }}
+          persistentVolumeClaim:
+            claimName: {{ include "embedding.fullname" $ | lower }}-pvc-{{ $modelName }}
+        - name: kubeconfig
+          hostPath:
+            path: /home/vadmin/.kube
+
+      nodeSelector:
+        {{- if $modelConfig.nodeType }}
+        {{- end }}
+
+---
+{{- end }}
+{{- end }}

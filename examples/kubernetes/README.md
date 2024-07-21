@@ -1,5 +1,21 @@
 # llama.cpp/example/kubernetes
 
+
+## Setup kubernetes
+
+You can use microk8s to setup a kubernetes cluster on your local machine. 
+
+Once downloaded enable the following addons for the cluster:
+
+```shell
+microk8s enable dns storage registry helm3 gpu
+```
+
+You can also set up your system to use the microk8s kubectl [here](https://microk8s.io/docs/working-with-kubectl).
+
+
+## Usage
+
 This example demonstrates how to deploy [llama.cpp server](../server) on a [kubernetes cluster](https://kubernetes.io).
 
 ![llama.cpp.kubernetes.png](llama.cpp.kubernetes.png)
@@ -10,19 +26,60 @@ We provide an [Helm chart](https://helm.sh/)  repository to deploy llama.cpp at 
 
 helm repo add llama.cpp https://ggerganov.github.io/llama.cpp
 helm repo update
-helm install example llama-cpp --namespace llama-cpp --create-namespace
+helm install example llamacpp --namespace llama-cpp --create-namespace
 ```
 
-## Prerequisites
+This chart features 2 subcharts that can be deployed independently:
+1. modelRunner: Responsible for completion
+2. embeddings: Responsible for embeddings
 
-Obviously you need a kubernetes cluster.
+In order to set the various parameters for the deployment, you can use the `values.yaml` file:
 
-Required access to an API server with the following `roles`:
+```yaml
 
-- verbs: `["get", "list", "watch", "create", "update", "patch", "delete"]` 
-- resources: `["pods", "deployments", "services", "pvc", "jobs", "ingresses]`
+modelRunner:
+  fullname: "modelrunner"
+  service:
+    type: ClusterIP
+    port: 8080
+  modelPath: 
+    val: <Path to local>
+  models: {
+    "model1":{
+      "enabled": true,
+      "download": true,
+      "replicas": 3,
+      "device": "cpu",
+      "autoScale": {
+        "enabled": false,
+        "minReplicas": 1,
+        "maxReplicas": 100,
+        "targetCPUUtilizationPercentage": 80
+      },
+      "url": "https://huggingface.co/TheBloke/CapybaraHermes-2.5-Mistral-7B-GGUF/resolve/main/capybarahermes-2.5-mistral-7b.Q4_0.gguf",
+      "image": "ghcr.io/ggerganov/llama.cpp:server",
+      "endpoint": "/model1"
+    }  
+  }
 
-If you do not have a real k8s cluster, you can give a try to [kind](https://kind.sigs.k8s.io/).
+```
+
+Adjust the model path to a local directory that stores the models. The models are downloaded from the provided URL and stored in the local directory. The models are then mounted to the pod.
+
+You can also adjust the number of replicas, the device, the image, the endpoint, and the autoscaling parameters.
+
+Ensure that the ingress is enabled on your cluster. You can use the following command to enable the ingress:
+
+```shell
+microk8s enable ingress
+```
+
+And add the url to `/etc/hosts`:
+
+```shell
+demo.local      127.0.0.1
+```
+
 
 ### Metrics monitoring
 
@@ -38,29 +95,22 @@ helm install \
     --namespace monitoring
 ```
 
-## Goals
 
-Deploy a production ready LLM API over kubernetes, including:
-- High availability
-- multi models
-- support of embeddings and completions models
-- load balancing
-- Auto scaling
-- Security 
+## Feature set for the Helm chart
 
-### Limitations
-This example does not cover [NVidia based docker engine](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html), the target architecture remains the same, just switch to [cuda based images](../../.devops/server-cuda.Dockerfile).
+- [x] High availability
+- [x] Multi models
+- [x] Support of embeddings and completions models
+- [ ] Load balancing
+- [x] Auto scaling
+- [x] CUDA support
+- [x] Downloading functionality
+- [ ] Redownload on upgrade hook. (Currently the models are downloaded only on the first deployment, there is no redownload functionality on upgrade if required)
 
-## Proposed architectures
+## Pending testing
 
-**Constraints:**
-- llama.cpp server is mono model
-- GGUF models files are heavy (even quantized)
+- [ ] Load balancing
+- [ ] multi GPU support using MiG for kubernetes [docs](https://docs.nvidia.com/datacenter/tesla/mig-user-guide/index.html) & [microk8s](https://microk8s.io/docs/addon-gpu)
 
-**Approach**
-1. Models file are downloaded once on a `PV` by a `Job` when the stack is deployed
-2. Server `Deployment` is using an init containers to verify if the model is downloaded
-3. `Ingress` rules are routing incoming request to the target models
-3. `Probes` are used to monitor the `pods` healthiness
-4. [Prometheus](https://prometheus.io/) is used as the metrics server
+
 

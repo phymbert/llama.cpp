@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "modelRunner.fullname" . | lower }}-configmap
+data:
+  {{- range $modelName, $modelConfig := .Values.models }}
+  {{ $modelName }}.status: "pending"
+  {{- end }}

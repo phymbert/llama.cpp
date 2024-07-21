@@ -1,0 +1,21 @@
+{{- range $modelName, $modelConfig := .Values.models }}
+
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "embedding.fullname" $ | lower }}-pv-{{ $modelName }}
+  labels:
+    {{- include "embedding.labels" $ | nindent 4 }}
+
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: {{ $.Values.modelPath.val }}
+
+---
+
+{{- end}}
